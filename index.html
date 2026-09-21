@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Provas - Residência Médica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-xl mt-10">
+        <header class="border-b pb-4 mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-600">Simulador de Provas Médicas</h1>
+                <p class="text-sm text-slate-500">Estude por banca, ano, tema ou foque nas questões erradas.</p>
+            </div>
+            <div class="space-x-2">
+                <button onclick="mudarAba('estudo')" id="btn-estudo" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">Fazer Provas</button>
+                <button onclick="mudarAba('erradas')" id="btn-erradas" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold">Revisar Erradas (<span id="contador-erradas">0</span>)</button>
+            </div>
+        </header>
+
+        <!-- Filtros Dinâmicos -->
+        <div id="secao-filtros" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-slate-100 p-4 rounded-lg">
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Banca</label>
+                <select id="filtro-banca" onchange="filtrarQuestoes()" class="w-full p-2 border rounded-md bg-white text-sm">
+                    <option value="">Todas as Bancas</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Ano</label>
+                <select id="filtro-ano" onchange="filtrarQuestoes()" class="w-full p-2 border rounded-md bg-white text-sm">
+                    <option value="">Todos os Anos</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Tema</label>
+                <select id="filtro-tema" onchange="filtrarQuestoes()" class="w-full p-2 border rounded-md bg-white text-sm">
+                    <option value="">Todos os Temas</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Área da Questão -->
+        <div id="container-questao" class="space-y-4">
+            <p class="text-center text-slate-500 py-10">A carregar questões...</p>
+        </div>
+
+        <!-- Navegação -->
+        <div class="flex justify-between items-center mt-8 border-t pt-4">
+            <button onclick="questaoAnterior()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300">Anterior</button>
+            <span id="paginacao-info" class="text-sm text-slate-500">Questão 0 de 0</span>
+            <button onclick="proximaQuestao()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Seguinte</button>
+        </div>
+    </div>
+
+    <script>
+        let questoes = [];
+        let questoesFiltradas = [];
+        let indiceAtual = 0;
+        let modoRevisaoErradas = false;
+        let questoesErradas = JSON.parse(localStorage.getItem('questoesErradas')) || [];
+
+        async function carregarDados() {
+            try {
+                const response = await fetch('questoes.json');
+                questoes = await response.json();
+                questoesFiltradas = questoes;
+                popularFiltros();
+                renderizarQuestao();
+                atualizarContadorErradas();
+            } catch (error) {
+                document.getElementById('container-questao').innerHTML = `
+                    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-sm">
+                        <strong>Erro ao carregar as questões.</strong> Certifica-te de que o ficheiro <code>questoes.json</code> está na mesma pasta no GitHub.
+                    </div>`;
+            }
+        }
+
+        function popularFiltros() {
+            const bancas = [...new Set(questoes.map(q => q.banca))].sort();
+            const anos = [...new Set(questoes.map(q => q.ano))].sort();
+            const temas = [...new Set(questoes.map(q => q.tema))].sort();
+
+            const selectBanca = document.getElementById('filtro-banca');
+            bancas.forEach(b => selectBanca.innerHTML += `<option value="${b}">${b}</option>`);
+
+            const selectAno = document.getElementById('filtro-ano');
+            anos.forEach(a => selectAno.innerHTML += `<option value="${a}">${a}</option>`);
+
+            const selectTema = document.getElementById('filtro-tema');
+            temas.forEach(t => selectTema.innerHTML += `<option value="${t}">${t}</option>`);
+        }
+
+        function filtrarQuestoes() {
+            const bVal = document.getElementById('filtro-banca').value;
+            const aVal = document.getElementById('filtro-ano').value;
+            const tVal = document.getElementById('filtro-tema').value;
+
+            questoesFiltradas = questoes.filter(q => {
+                return (!bVal || q.banca === bVal) &&
+                       (!aVal || q.ano == aVal) &&
+                       (!tVal || q.tema === tVal);
+            });
+
+            indiceAtual = 0;
+            renderizarQuestao();
+        }
+
+        function atualizarContadorErradas() {
+            document.getElementById('contador-erradas').innerText = questoesErradas.length;
+        }
+
+        function renderizarQuestao() {
+            let lista = modoRevisaoErradas ? questoes.filter(q => questoesErradas.includes(q.id)) : questoesFiltradas;
+
+            const container = document.getElementById('container-questao');
+            if (lista.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-500 py-10">Nenhuma questão encontrada com os filtros selecionados.</p>`;
+                document.getElementById('paginacao-info').innerText = "0 de 0";
+                return;
+            }
+
+            if (indiceAtual >= lista.length) indiceAtual = 0;
+            const q = lista[indiceAtual];
+
+            let htmlAlternativas = '';
+            for (let letra in q.alternativas) {
+                htmlAlternativas += `
+                    <label class="block p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                        <input type="radio" name="alternativa" value="${letra}" class="mr-2">
+                        <strong>${letra})</strong> ${q.alternativas[letra]}
+                    </label>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="flex gap-2 mb-2">
+                    <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded">${q.banca}</span>
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded">${q.ano}</span>
+                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded">${q.tema}</span>
+                </div>
+                <p class="text-base font-medium text-slate-800">${q.enunciado}</p>
+                <div class="space-y-2 mt-4">${htmlAlternativas}</div>
+                <div class="mt-4 flex gap-4">
+                    <button onclick="responder(${q.id}, '${q.gabarito}', \`${q.comentario}\`)" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">Responder</button>
+                </div>
+                <div id="feedback" class="mt-4"></div>
+            `;
+
+            document.getElementById('paginacao-info').innerText = `Questão ${indiceAtual + 1} de ${lista.length}`;
+            atualizarContadorErradas();
+        }
+
+        function responder(id, gabarito, comentario) {
+            const selecionada = document.querySelector('input[name="alternativa"]:checked');
+            const feedback = document.getElementById('feedback');
+            
+            if (!selecionada) {
+                alert("Por favor, seleciona uma alternativa.");
+                return;
+            }
+
+            const respUsuario = selecionada.value;
+            if (respUsuario === gabarito) {
+                feedback.innerHTML = `<div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm"><strong>Resposta Correta!</strong><br>${comentario}</div>`;
+                questoesErradas = questoesErradas.filter(item => item !== id);
+            } else {
+                feedback.innerHTML = `<div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-sm"><strong>Resposta Incorreta.</strong> O gabarito é ${gabarito}.<br>${comentario}</div>`;
+                if (!questoesErradas.includes(id)) questoesErradas.push(id);
+            }
+            localStorage.setItem('questoesErradas', JSON.stringify(questoesErradas));
+            atualizarContadorErradas();
+        }
+
+        function proximaQuestao() {
+            indiceAtual++;
+            renderizarQuestao();
+        }
+
+        function questaoAnterior() {
+            if (indiceAtual > 0) indiceAtual--;
+            renderizarQuestao();
+        }
+
+        function mudarAba(aba) {
+            indiceAtual = 0;
+            if (aba === 'erradas') {
+                modoRevisaoErradas = true;
+                document.getElementById('btn-erradas').className = "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold";
+                document.getElementById('btn-estudo').className = "px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold";
+                document.getElementById('secao-filtros').style.display = 'none';
+            } else {
+                modoRevisaoErradas = false;
+                document.getElementById('btn-estudo').className = "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold";
+                document.getElementById('btn-erradas').className = "px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold";
+                document.getElementById('secao-filtros').style.display = 'grid';
+            }
+            renderizarQuestao();
+        }
+
+        carregarDados();
+    </script>
+</body>
+</html>
