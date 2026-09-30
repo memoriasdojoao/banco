@@ -1,205 +1,338 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plataforma de Provas - Residência Médica</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escala de Coma de Glasgow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F7F6; --surface:#FFFFFF; --border:#DCE4E3;
+    --text:#16262B; --text2:#4B6069;
+    --teal:#1F6F78; --teal-deep:#134A51;
+    --clay:#C9622A; --clay-soft:#F3E3D8;
+    --ok:#2C7A54; --warn:#B03A2E;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0F1A1C; --surface:#16262B; --border:#243638;
+      --text:#EAF1F0; --text2:#9FB3B6;
+      --teal:#5FB8BF; --teal-deep:#8FD0D5;
+      --clay:#E0895A; --clay-soft:#2A211B;
+      --ok:#5FB98A; --warn:#E37A6C;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F1A1C; --surface:#16262B; --border:#243638;
+    --text:#EAF1F0; --text2:#9FB3B6;
+    --teal:#5FB8BF; --teal-deep:#8FD0D5;
+    --clay:#E0895A; --clay-soft:#2A211B;
+    --ok:#5FB98A; --warn:#E37A6C;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"IBM Plex Sans", sans-serif; line-height:1.6;
+    font-size:16px;
+  }
+  h1,h2,h3{font-family:"Source Serif 4", serif; font-weight:700; color:var(--text); margin:0 0 .4em;}
+  .wrap{max-width:700px; margin:0 auto; padding:48px 20px 80px;}
+  header.hero{margin-bottom:40px;}
+  header.hero p.kicker{color:var(--teal); font-family:"Source Serif 4",serif; font-style:italic; font-size:1.05em; margin:0 0 6px;}
+  h1{font-size:2.1em; line-height:1.15;}
+  header.hero p.sub{color:var(--text2); max-width:60ch; margin-top:10px;}
+
+  section{margin-bottom:44px;}
+  section > h2{font-size:1.4em; border-bottom:2px solid var(--border); padding-bottom:10px; margin-bottom:18px;}
+  p{max-width:68ch;}
+
+  table.gcs{width:100%; border-collapse:collapse; margin:20px 0; font-size:.95em;}
+  table.gcs caption{text-align:left; color:var(--text2); font-size:.85em; margin-bottom:8px;}
+  table.gcs th, table.gcs td{border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top;}
+  table.gcs th{background:var(--surface); font-family:"Source Serif 4",serif; font-weight:600;}
+  table.gcs td.pts{font-variant-numeric:tabular-nums; font-weight:600; color:var(--teal-deep); width:3em; text-align:center;}
+
+  .callout{
+    background:var(--clay-soft); border-left:3px solid var(--clay);
+    padding:14px 16px; border-radius:2px; margin:18px 0; font-size:.96em;
+  }
+  .callout strong{color:var(--clay);}
+
+  .divider{
+    display:flex; align-items:center; gap:14px; margin:56px 0 28px;
+  }
+  .divider h2{margin:0; border:none; padding:0; white-space:nowrap;}
+  .divider::after{content:""; flex:1; height:1px; background:var(--border);}
+
+  .case{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:6px; padding:22px 22px 18px; margin-bottom:18px;
+  }
+  .case-num{
+    display:inline-block; font-family:"Source Serif 4",serif; font-weight:700;
+    color:var(--teal); font-size:.9em; margin-bottom:6px;
+  }
+  .case h3{font-size:1.08em; margin-bottom:8px;}
+  .case p.vignette{color:var(--text); margin:0 0 14px;}
+
+  details{margin-top:10px;}
+  summary{
+    cursor:pointer; color:var(--teal-deep); font-weight:600; font-size:.94em;
+    list-style:none; display:inline-flex; align-items:center; gap:6px;
+    padding:6px 0; user-select:none;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary::before{content:"▸"; transition:transform .15s ease; display:inline-block;}
+  details[open] summary::before{transform:rotate(90deg);}
+  .answer{
+    margin-top:10px; padding:14px 16px; background:var(--bg); border-radius:4px;
+    border:1px solid var(--border); font-size:.95em;
+  }
+  .answer .score{
+    font-family:"Source Serif 4",serif; font-weight:700; font-size:1.15em;
+    color:var(--ok); margin-bottom:6px;
+  }
+  .answer .breakdown{color:var(--text2); font-size:.92em; margin-bottom:8px;}
+
+  footer{color:var(--text2); font-size:.85em; text-align:center; margin-top:60px;}
+
+  nav.areas{display:flex; gap:8px; margin-bottom:28px; border-bottom:2px solid var(--border);}
+  nav.areas button{font:inherit; font-family:"Source Serif 4",serif; font-weight:700; font-size:1.05em; background:none; border:none; color:var(--text2); padding:10px 16px; cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px;}
+  nav.areas button[aria-selected="true"]{color:var(--teal-deep); border-bottom-color:var(--clay);}
+  .area[hidden],.topic[hidden],.index[hidden]{display:none;}
+  .idx-list{display:grid; gap:12px;}
+  button.idx{font:inherit; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:16px 18px; cursor:pointer; color:var(--text); display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  button.idx:hover{border-color:var(--teal);}
+  button.idx .t{font-family:"Source Serif 4",serif; font-weight:700; font-size:1.1em;}
+  button.idx .m{color:var(--text2); font-size:.88em; white-space:nowrap;}
+  button.back{font:inherit; background:none; border:none; color:var(--teal-deep); font-weight:600; cursor:pointer; padding:0 0 18px;}
+  ol.opts{list-style:none; padding:0; margin:0 0 10px;}
+  ol.opts li{padding:5px 0; color:var(--text);}
+  ol.opts li b{color:var(--teal); margin-right:4px;}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen p-6">
-    <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-xl mt-10">
-        <header class="border-b pb-4 mb-6 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-blue-600">Simulador de Provas Médicas</h1>
-                <p class="text-sm text-slate-500">Estude por banca, ano, tema ou foque nas questões erradas.</p>
-            </div>
-            <div class="space-x-2">
-                <button onclick="mudarAba('estudo')" id="btn-estudo" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">Fazer Provas</button>
-                <button onclick="mudarAba('erradas')" id="btn-erradas" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold">Revisar Erradas (<span id="contador-erradas">0</span>)</button>
-            </div>
-        </header>
+<body>
+<div class="wrap"><nav class="areas" role="tablist"><button role="tab" aria-selected="true" data-t="neuro">Neurología</button><button role="tab" aria-selected="false" data-t="gastro">Gastroenterología</button></nav><div class="area" id="neuro"><div class="index"><header class="hero"><p class="kicker">Índice de temas</p><h1>Neurología</h1><p class="sub">Elige un tema para estudiar.</p></header><div class="idx-list"><button class="idx" data-topic="n0"><span class="t">Escala de Coma de Glasgow</span><span class="m">Teoría + 15 casos clínicos</span></button></div></div><div class="topic" id="n0" hidden><button class="back">← Índice de temas</button>
 
-        <!-- Filtros Dinâmicos -->
-        <div id="secao-filtros" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-slate-100 p-4 rounded-lg">
-            <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Banca</label>
-                <select id="filtro-banca" onchange="filtrarQuestoes()" class="w-full p-2 border rounded-md bg-white text-sm">
-                    <option value="">Todas as Bancas</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Ano</label>
-                <select id="filtro-ano" onchange="filtrarQuestoes()" class="w-full p-2 border rounded-md bg-white text-sm">
-                    <option value="">Todos os Anos</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Tema</label>
-                <select id="filtro-tema" onchange="filtrarQuestoes()" class="w-full p-2 border rounded-md bg-white text-sm">
-                    <option value="">Todos os Temas</option>
-                </select>
-            </div>
-        </div>
+  <header class="hero">
+    <p class="kicker">Neurología clínica · guía práctica</p>
+    <h1>La Escala de Coma de Glasgow</h1>
+    <p class="sub">Por qué se creó, cómo se calcula componente por componente, y quince casos para que practiques hasta que el razonamiento se vuelva automático.</p>
+  </header>
 
-        <!-- Área da Questão -->
-        <div id="container-questao" class="space-y-4">
-            <p class="text-center text-slate-500 py-10">A carregar questões...</p>
-        </div>
+  <section>
+    <h2>¿Qué problema resuelve?</h2>
+    <p>Antes de 1974, describir el nivel de conciencia de un paciente dependía de palabras como "estuporoso", "letárgico" o "semicomatoso", términos que significan cosas distintas según quién los use. Graham Teasdale y Bryan Jennett, en Glasgow, diseñaron una escala que reemplaza esas impresiones subjetivas por una observación de tres comportamientos concretos y medibles: si el paciente abre los ojos, si habla de forma coherente y si mueve el cuerpo cuando se le pide o se le estimula. Cada uno se puntúa por separado y luego se suman, así dos médicos distintos, en distintos turnos, llegan al mismo número si observan lo mismo.</p>
+  </section>
 
-        <!-- Navegação -->
-        <div class="flex justify-between items-center mt-8 border-t pt-4">
-            <button onclick="questaoAnterior()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300">Anterior</button>
-            <span id="paginacao-info" class="text-sm text-slate-500">Questão 0 de 0</span>
-            <button onclick="proximaQuestao()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Seguinte</button>
-        </div>
-    </div>
+  <section>
+    <h2>Los tres componentes</h2>
+    <p>La lógica detrás de elegir justamente estas tres respuestas es que representan tres niveles distintos del sistema nervioso: la apertura ocular refleja la activación del tronco encefálico (el sistema reticular activador), la respuesta verbal refleja la integridad cortical superior y del lenguaje, y la respuesta motora refleja la vía que va desde la corteza hasta el músculo. Un daño puede afectar a una vía sin afectar a las otras, por eso se evalúan de forma independiente.</p>
 
-    <script>
-        let questoes = [];
-        let questoesFiltradas = [];
-        let indiceAtual = 0;
-        let modoRevisaoErradas = false;
-        let questoesErradas = JSON.parse(localStorage.getItem('questoesErradas')) || [];
+    <table class="gcs">
+      <caption>Apertura ocular (máximo 4 puntos)</caption>
+      <tr><td class="pts">4</td><td>Espontánea, sin necesidad de estímulo</td></tr>
+      <tr><td class="pts">3</td><td>Al hablarle o llamarlo por su nombre</td></tr>
+      <tr><td class="pts">2</td><td>Solo ante estímulo doloroso</td></tr>
+      <tr><td class="pts">1</td><td>Ninguna respuesta ocular</td></tr>
+    </table>
 
-        async function carregarDados() {
-            try {
-                const response = await fetch('questoes.json');
-                questoes = await response.json();
-                questoesFiltradas = questoes;
-                popularFiltros();
-                renderizarQuestao();
-                atualizarContadorErradas();
-            } catch (error) {
-                document.getElementById('container-questao').innerHTML = `
-                    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-sm">
-                        <strong>Erro ao carregar as questões.</strong> Certifica-te de que o ficheiro <code>questoes.json</code> está na mesma pasta no GitHub.
-                    </div>`;
-            }
-        }
+    <table class="gcs">
+      <caption>Respuesta verbal (máximo 5 puntos)</caption>
+      <tr><td class="pts">5</td><td>Orientado (sabe quién es, dónde está y qué fecha es aproximadamente)</td></tr>
+      <tr><td class="pts">4</td><td>Confuso, pero conversa (responde pero desorientado)</td></tr>
+      <tr><td class="pts">3</td><td>Palabras inapropiadas, sin conversación coherente</td></tr>
+      <tr><td class="pts">2</td><td>Sonidos incomprensibles (quejidos, gemidos)</td></tr>
+      <tr><td class="pts">1</td><td>Ninguna respuesta verbal</td></tr>
+    </table>
 
-        function popularFiltros() {
-            const bancas = [...new Set(questoes.map(q => q.banca))].sort();
-            const anos = [...new Set(questoes.map(q => q.ano))].sort();
-            const temas = [...new Set(questoes.map(q => q.tema))].sort();
+    <table class="gcs">
+      <caption>Respuesta motora (máximo 6 puntos)</caption>
+      <tr><td class="pts">6</td><td>Obedece órdenes simples ("apriete mi mano")</td></tr>
+      <tr><td class="pts">5</td><td>Localiza el dolor (lleva la mano hacia el estímulo doloroso)</td></tr>
+      <tr><td class="pts">4</td><td>Retira ante el dolor, sin localizarlo</td></tr>
+      <tr><td class="pts">3</td><td>Flexión anormal (decorticación: brazos flexionados hacia el pecho)</td></tr>
+      <tr><td class="pts">2</td><td>Extensión anormal (descerebración: brazos y piernas en extensión rígida)</td></tr>
+      <tr><td class="pts">1</td><td>Ninguna respuesta motora</td></tr>
+    </table>
 
-            const selectBanca = document.getElementById('filtro-banca');
-            bancas.forEach(b => selectBanca.innerHTML += `<option value="${b}">${b}</option>`);
+    <div class="callout"><strong>Regla clave:</strong> siempre se registra la <em>mejor</em> respuesta obtenida, incluso si un lado del cuerpo responde peor que el otro (por ejemplo, en una hemiparesia). El motivo es que la escala busca medir el nivel global de conciencia, no la función de un miembro en particular.</div>
+  </section>
 
-            const selectAno = document.getElementById('filtro-ano');
-            anos.forEach(a => selectAno.innerHTML += `<option value="${a}">${a}</option>`);
+  <section>
+    <h2>Cómo interpretar el total</h2>
+    <p>El puntaje va de 3 (el mínimo posible, nunca cero) a 15 (normal). Se agrupa así: 13 a 15 es trauma craneoencefálico leve; 9 a 12 es moderado; 8 o menos se considera coma y es el umbral clásico para plantear la protección de la vía aérea, típicamente con intubación, porque el paciente ya no puede protegerla por sí mismo.</p>
+    <div class="callout"><strong>Dos notaciones que hay que conocer:</strong> si el paciente está intubado no se puede evaluar el habla, así que se anota "T" junto al puntaje verbal (por ejemplo, 2T) y no se suma al total numérico de forma automática; y si los ojos no pueden abrirse por edema, hematoma o vendaje, se anota "C" (cerrado) en vez de un número, porque ausencia de apertura no es lo mismo que incapacidad de abrir.</div>
+  </section>
 
-            const selectTema = document.getElementById('filtro-tema');
-            temas.forEach(t => selectTema.innerHTML += `<option value="${t}">${t}</option>`);
-        }
+  <div class="divider"><h2>Quince casos clínicos</h2></div>
+  <p style="margin-bottom:28px; color:var(--text2);">Lee cada viñeta, calcula mentalmente los puntos de apertura ocular (O), respuesta verbal (V) y respuesta motora (M), suma el total, y recién después abre la respuesta para comparar.</p>
 
-        function filtrarQuestoes() {
-            const bVal = document.getElementById('filtro-banca').value;
-            const aVal = document.getElementById('filtro-ano').value;
-            const tVal = document.getElementById('filtro-tema').value;
+  <!-- CASE 1 -->
+  <div class="case"><span class="case-num">Caso 1</span>
+    <p class="vignette">Un hombre de 34 años llega tras una caída en bicicleta. Abre los ojos apenas usted se acerca a la camilla, dice su nombre y la fecha correctamente, y levanta el brazo cuando se le pide que lo haga.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O4 + V5 + M6 = 15/15</div>
+      <div class="breakdown">Apertura espontánea, orientado, obedece órdenes.</div>
+      Es un Glasgow normal: no hay compromiso de conciencia medible con esta escala, aunque igual debe vigilarse por el mecanismo del trauma.
+    </div></details>
+  </div>
 
-            questoesFiltradas = questoes.filter(q => {
-                return (!bVal || q.banca === bVal) &&
-                       (!aVal || q.ano == aVal) &&
-                       (!tVal || q.tema === tVal);
-            });
+  <!-- CASE 2 -->
+  <div class="case"><span class="case-num">Caso 2</span>
+    <p class="vignette">Mujer de 58 años encontrada en el suelo de su casa. No abre los ojos al llamarla, pero sí lo hace cuando se le aplica presión en el lecho ungueal. Emite quejidos sin palabras reconocibles. Al aplicar el estímulo doloroso, flexiona lentamente ambos brazos hacia el pecho.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O2 + V2 + M3 = 7/15</div>
+      <div class="breakdown">Apertura solo al dolor, sonidos incomprensibles, flexión anormal (decorticación).</div>
+      Con 7 puntos está por debajo del umbral de 8: es un coma y candidata a protección de la vía aérea. La flexión anormal sugiere lesión por encima del mesencéfalo.
+    </div></details>
+  </div>
 
-            indiceAtual = 0;
-            renderizarQuestao();
-        }
+  <!-- CASE 3 -->
+  <div class="case"><span class="case-num">Caso 3</span>
+    <p class="vignette">Adolescente de 16 años tras accidente de moto. No abre los ojos con ningún estímulo. No emite ningún sonido. Ante el dolor, ambos brazos y piernas se extienden de forma rígida hacia adentro.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O1 + V1 + M2 = 4/15</div>
+      <div class="breakdown">Sin apertura ocular, sin respuesta verbal, extensión anormal (descerebración).</div>
+      Es un cuadro grave; la postura de descerebración implica una lesión más caudal (a nivel de tronco encefálico) que la decorticación, y conlleva peor pronóstico.
+    </div></details>
+  </div>
 
-        function atualizarContadorErradas() {
-            document.getElementById('contador-erradas').innerText = questoesErradas.length;
-        }
+  <!-- CASE 4 -->
+  <div class="case"><span class="case-num">Caso 4</span>
+    <p class="vignette">Hombre de 45 años con intoxicación alcohólica aguda. Abre los ojos al escuchar su nombre, pero responde con frases incoherentes y no sabe en qué ciudad está. Empuja la mano del examinador cuando este le aplica dolor en el esternón, dirigiendo el movimiento hacia el punto de estímulo.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O3 + V4 + M5 = 12/15</div>
+      <div class="breakdown">Apertura a la voz, confuso pero conversa, localiza el dolor.</div>
+      Un Glasgow moderado. Importante: el alcohol puede fluctuar el estado de conciencia, así que conviene reevaluar cada 15-30 minutos y no atribuir todo a la intoxicación sin descartar trauma craneal asociado.
+    </div></details>
+  </div>
 
-        function renderizarQuestao() {
-            let lista = modoRevisaoErradas ? questoes.filter(q => questoesErradas.includes(q.id)) : questoesFiltradas;
+  <!-- CASE 5 -->
+  <div class="case"><span class="case-num">Caso 5</span>
+    <p class="vignette">Paciente de 70 años en UCI, sedado y con tubo orotraqueal por insuficiencia respiratoria. No abre los ojos espontáneamente pero sí al aspirarle secreciones. No puede hablar por el tubo. Al aspirar, intenta llevar la mano hacia el tubo para retirarlo.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O2 + V1T + M5 = 8T/15</div>
+      <div class="breakdown">Apertura al estímulo, verbal no evaluable por intubación (se anota T), localiza el estímulo (intentar retirar el tubo cuenta como localización).</div>
+      La "T" recuerda que el componente verbal no puede puntuarse de forma real; muchos servicios reportan el total sin el verbal más la letra T, en vez de sumar un valor supuesto.
+    </div></details>
+  </div>
 
-            const container = document.getElementById('container-questao');
-            if (lista.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-500 py-10">Nenhuma questão encontrada com os filtros selecionados.</p>`;
-                document.getElementById('paginacao-info').innerText = "0 de 0";
-                return;
-            }
+  <!-- CASE 6 -->
+  <div class="case"><span class="case-num">Caso 6</span>
+    <p class="vignette">Mujer de 24 años sufre una crisis convulsiva presenciada por su familia. Diez minutos después, en la ambulancia, abre los ojos espontáneamente, dice frases sueltas sin sentido claro y mueve las cuatro extremidades de forma normal cuando se le pide.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O4 + V4 + M6 = 14/15</div>
+      <div class="breakdown">Apertura espontánea, confusa (fase postictal), obedece órdenes.</div>
+      El estado postictal explica la confusión transitoria; se espera que mejore en los siguientes minutos, por lo que conviene reevaluar antes de alarmarse por el 14 en vez de 15.
+    </div></details>
+  </div>
 
-            if (indiceAtual >= lista.length) indiceAtual = 0;
-            const q = lista[indiceAtual];
+  <!-- CASE 7 -->
+  <div class="case"><span class="case-num">Caso 7</span>
+    <p class="vignette">Hombre de 50 años con cirrosis hepática avanzada, traído por su familia porque "no responde bien". Abre los ojos al hablarle, dice palabras sin relación entre sí ("mesa... azul... perro"), y al aplicar dolor retira el brazo sin dirigirlo hacia el estímulo.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O3 + V3 + M4 = 10/15</div>
+      <div class="breakdown">Apertura a la voz, palabras inapropiadas, retira sin localizar.</div>
+      Compatible con encefalopatía hepática moderada. La escala no dice la causa, solo el nivel de conciencia: aquí orienta a pedir amonio y descartar otras causas metabólicas antes de asumir que es "solo" la cirrosis.
+    </div></details>
+  </div>
 
-            let htmlAlternativas = '';
-            for (let letra in q.alternativas) {
-                htmlAlternativas += `
-                    <label class="block p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition">
-                        <input type="radio" name="alternativa" value="${letra}" class="mr-2">
-                        <strong>${letra})</strong> ${q.alternativas[letra]}
-                    </label>
-                `;
-            }
+  <!-- CASE 8 -->
+  <div class="case"><span class="case-num">Caso 8</span>
+    <p class="vignette">Paciente diabético de 62 años, hallado confundido por su esposa. Al llegar, no abre los ojos espontáneamente pero sí al llamarlo con voz fuerte. Responde con palabras aisladas, sin frases completas. Obedece cuando se le pide que apriete la mano del examinador.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O3 + V3 + M6 = 12/15</div>
+      <div class="breakdown">Apertura a la voz, palabras inapropiadas, obedece órdenes.</div>
+      Antes de pensar en causas neurológicas estructurales, en un diabético con este cuadro siempre se mide la glucemia capilar de inmediato: la hipoglucemia es una causa reversible de alteración de conciencia y corregirla puede normalizar el Glasgow en minutos.
+    </div></details>
+  </div>
 
-            container.innerHTML = `
-                <div class="flex gap-2 mb-2">
-                    <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded">${q.banca}</span>
-                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded">${q.ano}</span>
-                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded">${q.tema}</span>
-                </div>
-                <p class="text-base font-medium text-slate-800">${q.enunciado}</p>
-                <div class="space-y-2 mt-4">${htmlAlternativas}</div>
-                <div class="mt-4 flex gap-4">
-                    <button onclick="responder(${q.id}, '${q.gabarito}', \`${q.comentario}\`)" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">Responder</button>
-                </div>
-                <div id="feedback" class="mt-4"></div>
-            `;
+  <!-- CASE 9 -->
+  <div class="case"><span class="case-num">Caso 9</span>
+    <p class="vignette">Mujer de 80 años con sospecha de accidente cerebrovascular. Abre los ojos espontáneamente. No emite ningún sonido, ni siquiera quejidos. Con la mano derecha obedece la orden de apretar los dedos del examinador, pero el brazo izquierdo no se mueve ni siquiera con estímulo doloroso.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O4 + V1 + M6 = 11/15</div>
+      <div class="breakdown">Apertura espontánea, sin respuesta verbal, y motora: se registra la <em>mejor</em> respuesta (M6 del lado derecho), no la ausencia del lado izquierdo.</div>
+      Este caso ilustra la regla de "mejor respuesta": aunque el brazo izquierdo esté plégico, el M6 del lado sano es el que se anota. La asimetría en sí misma es un dato clínico valioso, pero se documenta aparte del número de la escala.
+    </div></details>
+  </div>
 
-            document.getElementById('paginacao-info').innerText = `Questão ${indiceAtual + 1} de ${lista.length}`;
-            atualizarContadorErradas();
-        }
+  <!-- CASE 10 -->
+  <div class="case"><span class="case-num">Caso 10</span>
+    <p class="vignette">Joven de 19 años tras sobredosis de opioides, revertida parcialmente con naloxona en la ambulancia. Abre los ojos solo cuando se le aplica dolor. Gime sin palabras. Retira el brazo del estímulo doloroso sin dirigirlo hacia él.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O2 + V2 + M4 = 8/15</div>
+      <div class="breakdown">Apertura solo al dolor, sonidos incomprensibles, retira sin localizar.</div>
+      Justo en el límite del coma (8). Como la naloxona tiene una vida media más corta que muchos opioides, hay riesgo de que el efecto reversor desaparezca antes que el opioide y el paciente vuelva a caer en un Glasgow más bajo: se necesita observación prolongada, no un alta rápida.
+    </div></details>
+  </div>
 
-        function responder(id, gabarito, comentario) {
-            const selecionada = document.querySelector('input[name="alternativa"]:checked');
-            const feedback = document.getElementById('feedback');
-            
-            if (!selecionada) {
-                alert("Por favor, seleciona uma alternativa.");
-                return;
-            }
+  <!-- CASE 11 -->
+  <div class="case"><span class="case-num">Caso 11</span>
+    <p class="vignette">Hombre de 40 años con traumatismo facial severo y edema bilateral de párpados que le impide físicamente abrir los ojos. Al hablarle, responde orientado y correctamente. Obedece la orden de mostrar el pulgar hacia arriba.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">OC (no evaluable) + V5 + M6</div>
+      <div class="breakdown">Ojos no evaluables por edema (se anota "C", no un número), orientado, obedece órdenes.</div>
+      Anotar "1" aquí sería un error grave: implicaría que no hay ninguna respuesta ocular posible, cuando en realidad es una limitación mecánica, no neurológica. La "C" evita que este paciente parezca estar peor de lo que está.
+    </div></details>
+  </div>
 
-            const respUsuario = selecionada.value;
-            if (respUsuario === gabarito) {
-                feedback.innerHTML = `<div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm"><strong>Resposta Correta!</strong><br>${comentario}</div>`;
-                questoesErradas = questoesErradas.filter(item => item !== id);
-            } else {
-                feedback.innerHTML = `<div class="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-sm"><strong>Resposta Incorreta.</strong> O gabarito é ${gabarito}.<br>${comentario}</div>`;
-                if (!questoesErradas.includes(id)) questoesErradas.push(id);
-            }
-            localStorage.setItem('questoesErradas', JSON.stringify(questoesErradas));
-            atualizarContadorErradas();
-        }
+  <!-- CASE 12 -->
+  <div class="case"><span class="case-num">Caso 12</span>
+    <p class="vignette">Paciente de 66 años con tumor cerebral conocido, en control ambulatorio, pero hoy la familia nota que "está cada vez peor" durante el día. Por la mañana abría los ojos espontáneamente y conversaba con frases completas aunque algo lentas; por la tarde solo abre los ojos al llamarlo y responde con palabras sueltas.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">Mañana: O4+V4(ó5)+M6 ≈ 14-15 · Tarde: O3+V3+M6 = 12</div>
+      <div class="breakdown">La caída de 2 a 3 puntos en pocas horas es el dato más importante, más que el número absoluto en un momento dado.</div>
+      Este caso muestra por qué la escala se usa como tendencia y no como una foto fija: una caída de 2 puntos o más en un paciente previamente estable es señal de alarma que obliga a repetir imágenes o reevaluar la causa, sin esperar a que llegue a 8.
+    </div></details>
+  </div>
 
-        function proximaQuestao() {
-            indiceAtual++;
-            renderizarQuestao();
-        }
+  <!-- CASE 13 -->
+  <div class="case"><span class="case-num">Caso 13</span>
+    <p class="vignette">Mujer de 28 años, dos horas después de una cirugía bajo anestesia general, aún con efecto residual de los anestésicos. Abre los ojos al llamarla por su nombre en voz alta. Responde palabras aisladas, algo confusas. Ante el dolor, localiza y aparta la mano del examinador.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O3 + V3 + M5 = 11/15</div>
+      <div class="breakdown">Apertura a la voz, palabras inapropiadas, localiza el dolor.</div>
+      En el contexto postanestésico, un 11 puede ser esperable y transitorio. La escala no distingue "por qué" está así, por eso siempre se interpreta junto con el contexto clínico y se repite la medición a los 30-60 minutos para ver si mejora con la eliminación del fármaco.
+    </div></details>
+  </div>
 
-        function questaoAnterior() {
-            if (indiceAtual > 0) indiceAtual--;
-            renderizarQuestao();
-        }
+  <!-- CASE 14 -->
+  <div class="case"><span class="case-num">Caso 14</span>
+    <p class="vignette">Hombre de 55 años con meningitis bacteriana confirmada. No abre los ojos ante ningún estímulo, incluido el dolor intenso. No emite sonidos. No hay ningún movimiento de las extremidades ante el dolor, ni siquiera reflejo.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O1 + V1 + M1 = 3/15</div>
+      <div class="breakdown">Ausencia total de respuesta en los tres componentes.</div>
+      Es el puntaje mínimo posible en la escala; nunca se registra 0, porque la escala mide ausencia de respuesta observable, no ausencia de vida. Aun con Glasgow 3, siempre deben evaluarse los reflejos de tronco encefálico por separado (pupilar, corneal, etc.).
+    </div></details>
+  </div>
 
-        function mudarAba(aba) {
-            indiceAtual = 0;
-            if (aba === 'erradas') {
-                modoRevisaoErradas = true;
-                document.getElementById('btn-erradas').className = "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold";
-                document.getElementById('btn-estudo').className = "px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold";
-                document.getElementById('secao-filtros').style.display = 'none';
-            } else {
-                modoRevisaoErradas = false;
-                document.getElementById('btn-estudo').className = "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold";
-                document.getElementById('btn-erradas').className = "px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold";
-                document.getElementById('secao-filtros').style.display = 'grid';
-            }
-            renderizarQuestao();
-        }
+  <!-- CASE 15 -->
+  <div class="case"><span class="case-num">Caso 15</span>
+    <p class="vignette">Adulto joven de 22 años, tras golpe en la cabeza jugando fútbol. Abre los ojos espontáneamente apenas se le acerca. Está orientado en persona y lugar, pero cree que es un día distinto de la semana. Obedece perfectamente las órdenes que se le dan.</p>
+    <details><summary>Ver respuesta</summary><div class="answer">
+      <div class="score">O4 + V4 + M6 = 14/15</div>
+      <div class="breakdown">Apertura espontánea, orientación parcial (confuso porque falla en un ítem de orientación), obedece órdenes.</div>
+      Un error frecuente es puntuar V5 solo por "hablar bien". La orientación verbal completa exige acertar persona, lugar y tiempo; fallar en uno solo ya baja el puntaje a V4, aunque el habla suene fluida y coherente.
+    </div></details>
+  </div>
 
-        carregarDados();
-    </script>
-</body>
+  </div></div><div class="area" id="gastro" hidden><div class="index"><header class="hero"><p class="kicker">Índice de temas</p><h1>Gastroenterología</h1><p class="sub">Elige un tema. Preguntas estilo ENAMED y residencia, con explicación breve.</p></header><div class="idx-list"><button class="idx" data-topic="g0"><span class="t">Litiasis vesicular</span><span class="m">5 preguntas</span></button><button class="idx" data-topic="g1"><span class="t">Colecistitis aguda</span><span class="m">10 preguntas</span></button><button class="idx" data-topic="g2"><span class="t">Síndrome coledociano</span><span class="m">10 preguntas</span></button><button class="idx" data-topic="g3"><span class="t">Colangitis aguda</span><span class="m">10 preguntas</span></button></div></div><div class="topic" id="g0" hidden><button class="back">← Índice de temas</button><div class="divider"><h2>Litiasis vesicular</h2></div><div class="case"><span class="case-num">Pregunta 1</span><p class="vignette">Mujer de 40 años, obesa, con dolor en hipocondrio derecho de 3 horas tras una comida grasa, que cede solo. Afebril, laboratorio normal. La ecografía muestra litiasis vesicular sin engrosamiento de pared. ¿Cuál es la conducta más adecuada?</p><ol class="opts"><li><b>a)</b> Antibióticos por 7 días</li><li><b>b)</b> Ácido ursodesoxicólico por 2 años</li><li><b>c)</b> Colecistectomía laparoscópica electiva</li><li><b>d)</b> CPRE urgente</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Colecistectomía laparoscópica electiva</div>Es un cólico biliar sintomático: sin fiebre, leucocitosis ni signos ecográficos de inflamación no hay infección que tratar. Como la recurrencia es muy alta, el tratamiento definitivo es quirúrgico y programado. El ácido ursodesoxicólico es poco eficaz y se reserva para quien no puede operarse; la CPRE es para la vía biliar, que aquí es normal.</div></details></div><div class="case"><span class="case-num">Pregunta 2</span><p class="vignette">¿Cuál es el tipo de cálculo biliar más frecuente en países occidentales?</p><ol class="opts"><li><b>a)</b> Cálculos de pigmento negro</li><li><b>b)</b> Cálculos de pigmento marrón</li><li><b>c)</b> Cálculos de carbonato de calcio</li><li><b>d)</b> Cálculos de colesterol</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Cálculos de colesterol</div>Más del 80% son de colesterol, por sobresaturación de la bilis con colesterol y estasis vesicular. Los de pigmento negro se asocian a hemólisis y cirrosis; los marrones a infección biliar, típicamente dentro de la vía biliar.</div></details></div><div class="case"><span class="case-num">Pregunta 3</span><p class="vignette">¿Cuál es el estudio de primera elección para confirmar litiasis vesicular?</p><ol class="opts"><li><b>a)</b> Tomografía computada</li><li><b>b)</b> Ecografía abdominal</li><li><b>c)</b> Gammagrafía con HIDA</li><li><b>d)</b> Colangiorresonancia</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Ecografía abdominal</div>La ecografía detecta cálculos con sensibilidad mayor al 95%, sin radiación y a bajo costo: muestra imágenes hiperecoicas móviles con sombra acústica posterior. La TC es poco sensible porque muchos cálculos son isodensos a la bilis, y la HIDA evalúa función, no anatomía.</div></details></div><div class="case"><span class="case-num">Pregunta 4</span><p class="vignette">Hombre de 58 años, asintomático, con litiasis vesicular de 8 mm hallada en una ecografía solicitada por otro motivo. ¿Qué conducta corresponde?</p><ol class="opts"><li><b>a)</b> CPRE con esfinterotomía</li><li><b>b)</b> Litotricia extracorpórea</li><li><b>c)</b> Observación y educación sobre síntomas de alarma</li><li><b>d)</b> Colecistectomía inmediata</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Observación y educación sobre síntomas de alarma</div>Solo una minoría de los asintomáticos desarrolla síntomas (alrededor de 1-2% por año), por eso operar a todos expone a riesgo quirúrgico innecesario. Se opera por excepción: vesícula en porcelana, cálculos mayores de 3 cm, pólipos grandes o anemia hemolítica crónica.</div></details></div><div class="case"><span class="case-num">Pregunta 5</span><p class="vignette">¿Cuál de los siguientes NO es factor de riesgo de litiasis de colesterol?</p><ol class="opts"><li><b>a)</b> Pérdida rápida de peso</li><li><b>b)</b> Sexo masculino</li><li><b>c)</b> Obesidad</li><li><b>d)</b> Multiparidad</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Sexo masculino</div>Los estrógenos aumentan la saturación de colesterol en bilis, por eso el sexo femenino, el embarazo y la multiparidad son riesgo; el masculino no lo es. La obesidad y el adelgazamiento brusco (cirugía bariátrica) también favorecen cálculos, este último por estasis y movilización de colesterol.</div></details></div></div><div class="topic" id="g1" hidden><button class="back">← Índice de temas</button><div class="divider"><h2>Colecistitis aguda</h2></div><div class="case"><span class="case-num">Pregunta 1</span><p class="vignette">Mujer de 52 años con dolor en hipocondrio derecho de 30 horas, fiebre de 38,5 °C y vómitos. A la palpación el dolor corta la inspiración profunda. Leucocitos 15.000. ¿Qué signo describe este hallazgo?</p><ol class="opts"><li><b>a)</b> Signo de Blumberg</li><li><b>b)</b> Signo de Cullen</li><li><b>c)</b> Signo de Murphy</li><li><b>d)</b> Signo de Courvoisier</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Signo de Murphy</div>Murphy positivo (apnea inspiratoria al palpar bajo el reborde costal) indica inflamación de la vesícula, que desciende y toca la mano del examinador. Courvoisier es la vesícula palpable e indolora con ictericia; Blumberg es rebote peritoneal; Cullen es equimosis periumbilical.</div></details></div><div class="case"><span class="case-num">Pregunta 2</span><p class="vignette">¿Cuál de estos hallazgos ecográficos es más específico de colecistitis aguda?</p><ol class="opts"><li><b>a)</b> Presencia de cálculos con sombra acústica</li><li><b>b)</b> Colédoco de 4 mm</li><li><b>c)</b> Vesícula contraída</li><li><b>d)</b> Murphy ecográfico con engrosamiento de pared y líquido pericolecístico</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Murphy ecográfico con engrosamiento de pared y líquido pericolecístico</div>Los cálculos solo prueban litiasis, que puede ser asintomática. Lo que indica inflamación es el dolor al presionar con el transductor sobre la vesícula, la pared mayor de 4 mm y el líquido alrededor. La vesícula contraída y el colédoco normal no hablan a favor de colecistitis.</div></details></div><div class="case"><span class="case-num">Pregunta 3</span><p class="vignette">¿Cuál es la fisiopatología inicial de la colecistitis aguda litiásica?</p><ol class="opts"><li><b>a)</b> Infección ascendente desde el duodeno</li><li><b>b)</b> Obstrucción del conducto cístico por un cálculo</li><li><b>c)</b> Isquemia de la arteria cística</li><li><b>d)</b> Reflujo de jugo pancreático a la vesícula</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Obstrucción del conducto cístico por un cálculo</div>El cálculo impactado en el cístico impide el vaciado, aumenta la presión intraluminal y la pared se inflama y se isquemia (inflamación química primero); la infección bacteriana suele ser secundaria. Por eso la antibioticoterapia sola no resuelve la causa.</div></details></div><div class="case"><span class="case-num">Pregunta 4</span><p class="vignette">¿Cuál es el germen aislado con más frecuencia en la colecistitis aguda?</p><ol class="opts"><li><b>a)</b> Staphylococcus aureus</li><li><b>b)</b> Pseudomonas aeruginosa</li><li><b>c)</b> Escherichia coli</li><li><b>d)</b> Candida albicans</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Escherichia coli</div>Predominan los bacilos gramnegativos entéricos (E. coli, Klebsiella) seguidos de anaerobios y Enterococcus. Por eso los esquemas empíricos cubren enterobacterias y anaerobios, por ejemplo ceftriaxona + metronidazol o piperacilina-tazobactam en casos graves.</div></details></div><div class="case"><span class="case-num">Pregunta 5</span><p class="vignette">Paciente de 45 años con colecistitis aguda leve (grado I de Tokio), 36 horas de evolución, sin comorbilidades. ¿Cuál es el tratamiento de elección?</p><ol class="opts"><li><b>a)</b> Antibióticos y cirugía a los 3 meses</li><li><b>b)</b> CPRE con extracción de cálculos</li><li><b>c)</b> Colecistostomía percutánea</li><li><b>d)</b> Colecistectomía laparoscópica temprana, idealmente en las primeras 72 horas</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Colecistectomía laparoscópica temprana, idealmente en las primeras 72 horas</div>En un paciente de bajo riesgo la cirugía precoz reduce la estadía y las recurrencias, porque en los primeros días el edema aún permite una disección segura. La colecistostomía se reserva para pacientes de riesgo quirúrgico prohibitivo; la CPRE trata la vía biliar, no la vesícula.</div></details></div><div class="case"><span class="case-num">Pregunta 6</span><p class="vignette">Hombre de 78 años, con insuficiencia cardíaca severa y shock séptico por colecistitis aguda (disfunción orgánica, grado III). ¿Cuál es la mejor opción?</p><ol class="opts"><li><b>a)</b> Colecistectomía laparoscópica electiva en 6 semanas</li><li><b>b)</b> Colecistostomía percutánea guiada por imagen</li><li><b>c)</b> Colecistectomía abierta inmediata</li><li><b>d)</b> Solo antibióticos orales</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Colecistostomía percutánea guiada por imagen</div>Con riesgo quirúrgico muy alto el objetivo es drenar la fuente de sepsis con el menor trauma posible. La colecistostomía descomprime la vesícula, estabiliza al paciente y permite decidir la cirugía más adelante si se recupera.</div></details></div><div class="case"><span class="case-num">Pregunta 7</span><p class="vignette">Mujer de 60 años, en terapia intensiva hace 10 días con nutrición parenteral y ventilación mecánica, desarrolla fiebre y dolor en hipocondrio derecho. La ecografía muestra vesícula distendida con barro y pared engrosada, sin cálculos. ¿Cuál es el diagnóstico más probable?</p><ol class="opts"><li><b>a)</b> Síndrome de Mirizzi</li><li><b>b)</b> Colangitis esclerosante</li><li><b>c)</b> Colecistitis enfisematosa</li><li><b>d)</b> Colecistitis aguda alitiásica</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Colecistitis aguda alitiásica</div>El ayuno prolongado, la nutrición parenteral y la sepsis generan estasis e isquemia vesicular sin necesidad de cálculos. Tiene más gangrena, perforación y mortalidad que la litiásica, por lo que requiere drenaje o cirugía sin demora.</div></details></div><div class="case"><span class="case-num">Pregunta 8</span><p class="vignette">Paciente diabético de 65 años con colecistitis aguda. La radiografía y la TC muestran gas en la pared y la luz de la vesícula. ¿Cuál es el diagnóstico y el gérmen característico?</p><ol class="opts"><li><b>a)</b> Íleo biliar</li><li><b>b)</b> Colangitis por E. coli</li><li><b>c)</b> Colecistitis enfisematosa por Clostridium</li><li><b>d)</b> Colecistitis alitiásica por Candida</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Colecistitis enfisematosa por Clostridium</div>El gas indica infección por anaerobios formadores de gas (Clostridium perfringens), típica en diabéticos. Progresa rápido a gangrena y perforación, así que se trata con antibióticos que cubran anaerobios y cirugía urgente.</div></details></div><div class="case"><span class="case-num">Pregunta 9</span><p class="vignette">Paciente de 70 años con cuadro de obstrucción intestinal. En la radiografía de abdomen se observa aerobilia, asas delgadas dilatadas y una imagen cálcica en fosa ilíaca derecha. ¿Cuál es el diagnóstico?</p><ol class="opts"><li><b>a)</b> Vólvulo de sigma</li><li><b>b)</b> Pancreatitis aguda</li><li><b>c)</b> Íleo biliar</li><li><b>d)</b> Colitis isquémica</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Íleo biliar</div>Es la tríada de Rigler: un cálculo grande pasa a través de una fístula colecistoduodenal y se impacta en el íleon terminal, que es la zona más estrecha. El aire en la vía biliar proviene de esa fístula. El tratamiento es quirúrgico (enterolitotomía).</div></details></div><div class="case"><span class="case-num">Pregunta 10</span><p class="vignette">En una gammagrafía con HIDA (HIDA scan), ¿qué significa la falta de visualización de la vesícula a las 4 horas?</p><ol class="opts"><li><b>a)</b> Vía biliar principal obstruida</li><li><b>b)</b> Colangitis aguda</li><li><b>c)</b> Vesícula normal</li><li><b>d)</b> Obstrucción del conducto cístico, compatible con colecistitis aguda</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Obstrucción del conducto cístico, compatible con colecistitis aguda</div>El trazador llega al duodeno por la vía biliar principal, y llena la vesícula solo si el cístico está permeable. Si la vesícula no se llena pese a que el trazador llega al intestino, el cístico está ocluido. Se usa cuando la ecografía es dudosa.</div></details></div></div><div class="topic" id="g2" hidden><button class="back">← Índice de temas</button><div class="divider"><h2>Síndrome coledociano</h2></div><div class="case"><span class="case-num">Pregunta 1</span><p class="vignette">¿Cuál es la tríada clínica típica del síndrome coledociano?</p><ol class="opts"><li><b>a)</b> Ictericia, coluria y acolia</li><li><b>b)</b> Fiebre, ictericia y dolor en hipocondrio derecho</li><li><b>c)</b> Dolor, vómitos y distensión</li><li><b>d)</b> Ictericia, ascitis y encefalopatía</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: a) Ictericia, coluria y acolia</div>Al obstruirse la vía biliar la bilirrubina conjugada no llega al intestino: refluye a sangre (ictericia), se elimina por la orina (coluria) y las heces pierden estercobilina (acolia). La segunda opción es la tríada de Charcot (colangitis).</div></details></div><div class="case"><span class="case-num">Pregunta 2</span><p class="vignette">¿Qué patrón de laboratorio se espera en una obstrucción de la vía biliar?</p><ol class="opts"><li><b>a)</b> Aumento de fosfatasa alcalina y GGT con hiperbilirrubinemia directa</li><li><b>b)</b> Lipasa aumentada con FA normal</li><li><b>c)</b> Transaminasas mayores de 1000 con bilirrubina indirecta elevada</li><li><b>d)</b> Solo bilirrubina indirecta elevada</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: a) Aumento de fosfatasa alcalina y GGT con hiperbilirrubinemia directa</div>Es un patrón colestásico: la FA y la GGT aumentan porque las células biliares las sintetizan en exceso ante la estasis. Las transaminasas muy altas sugieren lesión hepatocelular; la bilirrubina indirecta, hemólisis o déficit de conjugación.</div></details></div><div class="case"><span class="case-num">Pregunta 3</span><p class="vignette">Ante sospecha de síndrome coledociano, ¿cuál es el primer estudio por imagen?</p><ol class="opts"><li><b>a)</b> PET-TC</li><li><b>b)</b> Ecografía abdominal</li><li><b>c)</b> CPRE</li><li><b>d)</b> Colangiorresonancia</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Ecografía abdominal</div>La ecografía es no invasiva, accesible y distingue colestasis extrahepática (vía biliar dilatada, más de 6 mm) de intrahepática. La CPRE tiene riesgo de complicaciones y se usa para tratar, no como primer diagnóstico.</div></details></div><div class="case"><span class="case-num">Pregunta 4</span><p class="vignette">Hombre de 72 años, con ictericia progresiva sin dolor, pérdida de 8 kg y vesícula palpable. ¿Qué signo presenta y qué sugiere?</p><ol class="opts"><li><b>a)</b> Signo de Grey-Turner, que sugiere pancreatitis necrotizante</li><li><b>b)</b> Signo de Courvoisier-Terrier, que sugiere neoplasia de cabeza de páncreas o periampular</li><li><b>c)</b> Signo de Charcot, que sugiere colangitis</li><li><b>d)</b> Signo de Murphy, que sugiere colecistitis</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Signo de Courvoisier-Terrier, que sugiere neoplasia de cabeza de páncreas o periampular</div>Si hay ictericia con vesícula palpable e indolora, la vesícula se dilató de forma lenta y progresiva: es decir, el obstáculo está por debajo del cístico y no es un cálculo, porque la litiasis crónica hace la vesícula fibrosa y retraída.</div></details></div><div class="case"><span class="case-num">Pregunta 5</span><p class="vignette">Mujer de 55 años con ictericia, dolor biliar y ecografía que muestra un cálculo en el colédoco de 10 mm y colédoco de 12 mm. Bilirrubina total 5 mg/dl. ¿Cuál es la conducta?</p><ol class="opts"><li><b>a)</b> Colecistectomía sin evaluar la vía biliar</li><li><b>b)</b> Observación</li><li><b>c)</b> Colangiorresonancia y luego decidir</li><li><b>d)</b> CPRE con esfinterotomía y extracción del cálculo</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) CPRE con esfinterotomía y extracción del cálculo</div>Es un caso de alta probabilidad de coledocolitiasis (cálculo visible, colédoco dilatado, bilirrubina alta): ir directamente a la CPRE ahorra estudios porque el diagnóstico y el tratamiento se realizan en el mismo procedimiento.</div></details></div><div class="case"><span class="case-num">Pregunta 6</span><p class="vignette">Paciente con dolor biliar, bilirrubina 2,5 mg/dl y colédoco de 8 mm sin cálculo visible en ecografía (probabilidad intermedia de coledocolitiasis). ¿Qué corresponde?</p><ol class="opts"><li><b>a)</b> Colangiorresonancia o ecoendoscopia antes de la CPRE</li><li><b>b)</b> Alta con control ambulatorio</li><li><b>c)</b> CPRE directa</li><li><b>d)</b> Quimioterapia</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: a) Colangiorresonancia o ecoendoscopia antes de la CPRE</div>Con probabilidad intermedia, la CPRE expondría a muchos pacientes sin cálculo a un procedimiento con riesgo de pancreatitis. Se confirma primero con un método no invasivo de alta sensibilidad, y solo quien tiene el cálculo pasa a CPRE.</div></details></div><div class="case"><span class="case-num">Pregunta 7</span><p class="vignette">¿Cuál es la complicación más frecuente de la CPRE?</p><ol class="opts"><li><b>a)</b> Colangitis</li><li><b>b)</b> Pancreatitis aguda</li><li><b>c)</b> Hemorragia</li><li><b>d)</b> Perforación duodenal</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Pancreatitis aguda</div>La manipulación e inyección de contraste en el conducto pancreático o el edema de la papila lo obstruyen y activan el páncreas. Ocurre en alrededor del 3-5%, y el riesgo baja con hidratación, indometacina rectal y stent pancreático.</div></details></div><div class="case"><span class="case-num">Pregunta 8</span><p class="vignette">Hombre de 50 años con ictericia e imagen de compresión extrínseca del hepático común por un cálculo impactado en el infundíbulo vesicular. ¿Qué síndrome es?</p><ol class="opts"><li><b>a)</b> Síndrome de Zollinger-Ellison</li><li><b>b)</b> Síndrome de Bouveret</li><li><b>c)</b> Síndrome de Budd-Chiari</li><li><b>d)</b> Síndrome de Mirizzi</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Síndrome de Mirizzi</div>En Mirizzi el cálculo del cístico o del infundíbulo comprime la vía biliar principal desde afuera, y la inflamación puede formar una fístula. Bouveret es el cálculo impactado en duodeno por una fístula colecistoduodenal.</div></details></div><div class="case"><span class="case-num">Pregunta 9</span><p class="vignette">¿Cuál es la causa más frecuente de síndrome coledociano en general?</p><ol class="opts"><li><b>a)</b> Colangiocarcinoma</li><li><b>b)</b> Coledocolitiasis</li><li><b>c)</b> Estenosis posquirúrgica</li><li><b>d)</b> Adenocarcinoma de páncreas</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Coledocolitiasis</div>La litiasis migrada desde la vesícula es la primera causa de obstrucción de la vía biliar. En mayores de 60 años con ictericia indolora y pérdida de peso, en cambio, debe pensarse en neoplasia.</div></details></div><div class="case"><span class="case-num">Pregunta 10</span><p class="vignette">¿Qué hallazgo en una colangiorresonancia sugiere coledocolitiasis?</p><ol class="opts"><li><b>a)</b> Vesícula distendida sin cálculos</li><li><b>b)</b> Defecto de llenado hipointenso dentro de la vía biliar</li><li><b>c)</b> Dilatación pancreática sin cambios biliares</li><li><b>d)</b> Hígado aumentado de tamaño</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Defecto de llenado hipointenso dentro de la vía biliar</div>Los cálculos no producen señal en secuencias T2 y contrastan con la bilis brillante, por lo que aparecen como vacíos redondeados dentro del colédoco. Tiene sensibilidad y especificidad cercanas al 90%.</div></details></div></div><div class="topic" id="g3" hidden><button class="back">← Índice de temas</button><div class="divider"><h2>Colangitis aguda</h2></div><div class="case"><span class="case-num">Pregunta 1</span><p class="vignette">¿Cuál es la tríada de Charcot?</p><ol class="opts"><li><b>a)</b> Fiebre, hipotensión y confusión</li><li><b>b)</b> Ictericia, coluria y acolia</li><li><b>c)</b> Dolor, vómitos y fiebre</li><li><b>d)</b> Fiebre, ictericia y dolor en hipocondrio derecho</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Fiebre, ictericia y dolor en hipocondrio derecho</div>Resume la obstrucción con infección: la estasis biliar produce dolor e ictericia, y las bacterias en la bilis provocan la fiebre. Está presente en alrededor del 50-70% de los casos.</div></details></div><div class="case"><span class="case-num">Pregunta 2</span><p class="vignette">¿Qué se agrega a la tríada de Charcot para formar la péntada de Reynolds?</p><ol class="opts"><li><b>a)</b> Hipotensión y alteración del estado mental</li><li><b>b)</b> Vómitos y diarrea</li><li><b>c)</b> Hematemesis y melena</li><li><b>d)</b> Ascitis y circulación colateral</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: a) Hipotensión y alteración del estado mental</div>Indican que la bacteriemia pasó a sepsis grave con shock y disfunción cerebral: es la forma supurada, con pus en la vía biliar, y exige drenaje urgente.</div></details></div><div class="case"><span class="case-num">Pregunta 3</span><p class="vignette">Hombre de 68 años con dolor en hipocondrio derecho, fiebre de 39 °C con escalofríos e ictericia. Leucocitos 18.000, bilirrubina 6 mg/dl. ¿Cuál es el diagnóstico más probable?</p><ol class="opts"><li><b>a)</b> Colangitis aguda</li><li><b>b)</b> Hepatitis A</li><li><b>c)</b> Colecistitis alitiásica</li><li><b>d)</b> Pancreatitis crónica</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: a) Colangitis aguda</div>La coexistencia de inflamación sistémica y colestasis en un paciente con dolor biliar es la base de los criterios de Tokio. La hepatitis A no suele producir escalofríos ni leucocitosis.</div></details></div><div class="case"><span class="case-num">Pregunta 4</span><p class="vignette">¿Cuál es el germen más frecuente en la colangitis aguda?</p><ol class="opts"><li><b>a)</b> Staphylococcus aureus</li><li><b>b)</b> Streptococcus pyogenes</li><li><b>c)</b> Helicobacter pylori</li><li><b>d)</b> Escherichia coli</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Escherichia coli</div>Las bacterias intestinales ascienden por la papila o llegan por vía portal y proliferan por la estasis. Además de E. coli participan Klebsiella, Enterococcus y anaerobios, por eso el esquema empírico cubre gramnegativos y anaerobios.</div></details></div><div class="case"><span class="case-num">Pregunta 5</span><p class="vignette">¿Cuáles son los dos pilares del tratamiento de la colangitis aguda?</p><ol class="opts"><li><b>a)</b> Antibióticos y dieta hídrica</li><li><b>b)</b> Antibióticos y drenaje de la vía biliar</li><li><b>c)</b> Corticoides y reposo</li><li><b>d)</b> Analgesia y observación</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: b) Antibióticos y drenaje de la vía biliar</div>Los antibióticos controlan la bacteriemia, pero la causa es la obstrucción y, sin drenaje, la presión intrabiliar mantiene la infección. La urgencia del drenaje depende de la gravedad.</div></details></div><div class="case"><span class="case-num">Pregunta 6</span><p class="vignette">Mujer con colangitis leve (grado I de Tokio), hemodinámicamente estable. Recibe antibióticos. ¿Cuándo corresponde drenar?</p><ol class="opts"><li><b>a)</b> Solo después de 3 semanas</li><li><b>b)</b> Nunca, basta con antibióticos</li><li><b>c)</b> Inmediatamente con cirugía abierta</li><li><b>d)</b> Si no mejora en 24-48 horas, o de forma electiva una vez controlado el cuadro</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: d) Si no mejora en 24-48 horas, o de forma electiva una vez controlado el cuadro</div>En la forma leve muchos pacientes responden solo al tratamiento médico, pero la causa persiste y hay que resolverla. Si no hay mejoría rápida, se considera una forma moderada y se drena.</div></details></div><div class="case"><span class="case-num">Pregunta 7</span><p class="vignette">Paciente con colangitis grado III: hipotensión con vasopresores, confusión e insuficiencia renal. ¿Cuál es la conducta?</p><ol class="opts"><li><b>a)</b> Drenaje biliar urgente (CPRE) con soporte intensivo</li><li><b>b)</b> Colecistectomía diferida</li><li><b>c)</b> Antibióticos y observación 72 horas</li><li><b>d)</b> Colangiorresonancia y alta</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: a) Drenaje biliar urgente (CPRE) con soporte intensivo</div>Es una emergencia con mortalidad alta, y retrasar el drenaje empeora el pronóstico. Se estabiliza al paciente (líquidos, antibióticos, vasopresores) y se drena lo antes posible, con el procedimiento más simple, lo que puede ser solo un stent o un drenaje nasobiliar.</div></details></div><div class="case"><span class="case-num">Pregunta 8</span><p class="vignette">Paciente con colangitis grave en quien la CPRE no es posible (anatomía alterada por una gastrectomía). ¿Cuál es la alternativa?</p><ol class="opts"><li><b>a)</b> Esperar y reevaluar en una semana</li><li><b>b)</b> Suspender antibióticos</li><li><b>c)</b> Drenaje biliar percutáneo transhepático</li><li><b>d)</b> Alimentación enteral</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Drenaje biliar percutáneo transhepático</div>Se accede a la vía biliar por punción a través del hígado, guiada por imagen, sin pasar por la papila. Es una alternativa cuando la CPRE falla o no puede realizarse.</div></details></div><div class="case"><span class="case-num">Pregunta 9</span><p class="vignette">¿Qué enfermedad de base se asocia con la colangitis esclerosante primaria?</p><ol class="opts"><li><b>a)</b> Enfermedad celíaca</li><li><b>b)</b> Artritis reumatoidea</li><li><b>c)</b> Colitis ulcerosa</li><li><b>d)</b> Síndrome de Sjögren</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Colitis ulcerosa</div>Hasta el 70% de los pacientes con esclerosante primaria tiene colitis ulcerosa. Se sospecha por colestasis crónica y se confirma con colangiorresonancia que muestra estenosis y dilataciones multifocales, con aspecto de rosario.</div></details></div><div class="case"><span class="case-num">Pregunta 10</span><p class="vignette">¿Cuál es un esquema antibiótico empírico adecuado en colangitis grave de la comunidad?</p><ol class="opts"><li><b>a)</b> Amoxicilina oral</li><li><b>b)</b> Vancomicina sola</li><li><b>c)</b> Piperacilina-tazobactam</li><li><b>d)</b> Fluconazol</li></ol><details><summary>Ver respuesta</summary><div class="answer"><div class="score">Respuesta: c) Piperacilina-tazobactam</div>Hay que cubrir enterobacterias, Enterococcus y anaerobios con buena penetración biliar. Piperacilina-tazobactam lo hace en un solo fármaco; la vancomicina no cubre gramnegativos y el fluconazol es antifúngico.</div></details></div></div></div><footer>Escala de Coma de Glasgow — Teasdale &amp; Jennett, 1974. Material de estudio, no reemplaza el juicio clínico ni protocolos institucionales.</footer>
+
+</div>
+<script>
+function show(area,topic){var A=document.getElementById(area);A.querySelector('.index').hidden=!!topic;
+A.querySelectorAll('.topic').forEach(function(t){t.hidden=t.id!==topic});window.scrollTo(0,0);}
+document.querySelectorAll('nav.areas button').forEach(function(b){b.addEventListener('click',function(){
+document.querySelectorAll('nav.areas button').forEach(function(x){x.setAttribute('aria-selected',x===b)});
+document.querySelectorAll('.area').forEach(function(a){a.hidden=a.id!==b.dataset.t});show(b.dataset.t,null);});});
+document.querySelectorAll('button.idx').forEach(function(b){b.addEventListener('click',function(){show(b.closest('.area').id,b.dataset.topic)})});
+document.querySelectorAll('button.back').forEach(function(b){b.addEventListener('click',function(){show(b.closest('.area').id,null)})});
+</script></body>
 </html>
